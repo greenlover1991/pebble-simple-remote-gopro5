@@ -1,0 +1,21 @@
+{
+    "author": "greenlover1991@gmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "pebble-simple-remote-gopro5",
+    "pebble": {
+        "displayName": "pebble-simple-remote-gopro5",
+        "enableMultiJS": true,
+        "messageKeys": [],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "uuid": "219cdcba-d737-4138-b09a-b8c93bb69311",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
