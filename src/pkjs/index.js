@@ -1,7 +1,16 @@
+const REQ_CAM_STATUS = 0;
+const REQ_TRIGGER_SHUTTER = 1;
+const REQ_STOP_SHUTTER = 2;
+
+const ERR_UNKNOWN = -1;
+const ERR_TIMEOUT = -2;
+
 //  APP messages
 Pebble.addEventListener('ready',
   function(e) {
-    console.log("PebbleKit READY");
+    console.log("PebbleKit JS READY");
+    
+    Pebble.sendAppMessage({ 'JS_READY': 1 });
   }
 );
 
@@ -10,11 +19,11 @@ Pebble.addEventListener('appmessage',
     console.log('App message received: ' + JSON.stringify(e));
     
     // process app requests
-    var mapCodeToFn = {
-      'REQ_CAM_STATUS': getStatus,
-      'REQ_TRIGGER_SHUTTER': triggerShutter,
-      'REQ_STOP_SHUTTER': stopShutter
-    };
+    var mapCodeToFn = [];
+    mapCodeToFn[REQ_CAM_STATUS] = getStatus;
+    mapCodeToFn[REQ_TRIGGER_SHUTTER] = triggerShutter;
+    mapCodeToFn[REQ_STOP_SHUTTER] = stopShutter;
+    
     var reqCode = e.payload.REQ_CODE;
     if (reqCode in mapCodeToFn) {
       mapCodeToFn[reqCode]();
@@ -25,10 +34,11 @@ Pebble.addEventListener('appmessage',
 );
 
 function sendAppMsg(reqCode, httpCode, msg, obj) {
-  var json = { reqCode: { code: httpCode, message: msg } };
-  if (obj != undefined) {
-    json.data = obj;
-  }
+  // FIXME needs to be a flat json
+  var json = { 'REQ_CODE': reqCode, 'RESP_CODE': httpCode, 'RESP_MESSAGE': msg };
+  //if (obj != undefined) {
+    //json['RESP_DATA'] = obj;
+  //}
   Pebble.sendAppMessage(json);
 }   
 
@@ -57,7 +67,7 @@ function get(reqCode, url, cbSuccess, cbFail, cbError) {
     if (cbError != undefined) {
       cbError(reqCode, e);
     } else {
-      sendAppMsg(reqCode, 'ERR_UNKNOWN', e);
+      sendAppMsg(reqCode, ERR_UNKNOWN, e);
     }
   };
   req.ontimeout = function(e) {
@@ -65,7 +75,7 @@ function get(reqCode, url, cbSuccess, cbFail, cbError) {
     if (cbError != undefined) {
       cbError(reqCode, e);
     } else {
-      sendAppMsg(reqCode, 'ERR_TIMEOUT', "Connection timeout: " + url + " " + this.timeout + "ms");
+      sendAppMsg(reqCode, ERR_TIMEOUT, "Connection timeout: " + url + " " + this.timeout + "ms");
     }
   };
   req.timeout = MAX_TIMEOUT;
@@ -91,7 +101,8 @@ const URL_TRIGGER_SHUTTER_STOP = BASE_URL + "/command/shutter?p=0";
  *  }
  */
 function getStatus(cbSuccess, cbError, cbTimeout) {
-  get('REQ_CAM_STATUS', URL_STATUS, cbSuccess, cbError, cbTimeout);
+  // FIXME need to flatten this to an array
+  get(REQ_CAM_STATUS, URL_STATUS, cbSuccess, cbError, cbTimeout);
 }
 
 
@@ -100,7 +111,7 @@ function getStatus(cbSuccess, cbError, cbTimeout) {
  * Returns empty JSON
  */
 function triggerShutter(cbSuccess, cbError, cbTimeout) {
-  get('REQ_TRIGGER_SHUTTER', URL_TRIGGER_SHUTTER, cbSuccess, cbError, cbTimeout);
+  get(REQ_TRIGGER_SHUTTER, URL_TRIGGER_SHUTTER, cbSuccess, cbError, cbTimeout);
 }
 
 /**
@@ -108,5 +119,5 @@ function triggerShutter(cbSuccess, cbError, cbTimeout) {
  * Returns empty JSON
  */
 function stopShutter(cbSuccess, cbError, cbTimeout) {
-  get('REQ_STOP_SHUTTER', URL_TRIGGER_SHUTTER_STOP, cbSuccess, cbError, cbTimeout);
+  get(REQ_STOP_SHUTTER, URL_TRIGGER_SHUTTER_STOP, cbSuccess, cbError, cbTimeout);
 }

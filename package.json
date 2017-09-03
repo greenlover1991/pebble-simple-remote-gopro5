@@ -6,12 +6,25 @@
     "pebble": {
         "displayName": "pebble-simple-remote-gopro5",
         "enableMultiJS": true,
-        "messageKeys": [],
+        "messageKeys": [
+            "JS_READY",
+            "REQ_CODE",
+            "RESP_CODE",
+            "RESP_MESSAGE",
+            "RESP_DATA"
+        ],
         "projectType": "native",
         "resources": {
             "media": []
         },
         "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "emery"
+        ],
         "uuid": "219cdcba-d737-4138-b09a-b8c93bb69311",
         "watchapp": {
             "watchface": false
