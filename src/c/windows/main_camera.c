@@ -20,6 +20,8 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     char *resp_msg = dict_find(iter, MESSAGE_KEY_RESP_MESSAGE)->value->cstring;
     if (resp_code == 200) {
       text_layer_set_text(s_hello_text_layer, "Captured success");
+      // vibrate for feedback
+      vibes_short_pulse();
     } else {
       text_layer_set_text(s_hello_text_layer, "Capturing failed.");
     }
@@ -47,6 +49,12 @@ static void click_config_provider(void *context) {
   //window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)down_click_handler);
 }
 
+static void accel_tap_handler(AccelAxisType accel, int32_t direction) {
+  if (accel == ACCEL_AXIS_Y) {
+    select_click_handler(NULL, NULL); 
+  }
+}
+
 static void window_load(Window *window) {
   // FIXME sgo temporary text info and other info
   Layer *window_layer = window_get_root_layer(window);
@@ -59,13 +67,18 @@ static void window_load(Window *window) {
     " down to switch modes");
   layer_add_child(window_layer, text_layer_get_layer(s_hello_text_layer));
   
+  // bind click and acceleration events
   window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
-  
+  accel_tap_service_subscribe(accel_tap_handler);
+
+  // initialize communications
   comms_init(inbox_received_handler, NULL, // FIXME sgo handle no app inbox connection
              NULL, NULL);
 }
 
 static void window_unload(Window *window) {
+  comms_deinit();
+  accel_tap_service_unsubscribe();
   text_layer_destroy(s_hello_text_layer);
   window_destroy(window);
   s_window = NULL;
