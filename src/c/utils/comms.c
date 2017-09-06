@@ -6,6 +6,10 @@
 // flag when PebbleKit JS is ready
 static bool s_js_ready;
 
+// preferences from Pebble app
+static bool s_flick_to_capture;
+static bool s_vibrate_on_capture;
+
 // app message handlers
 static AppMessageInboxReceived s_inbox_received_handler;
 static AppMessageInboxDropped s_inbox_dropped_handler;
@@ -14,6 +18,14 @@ static AppMessageOutboxFailed s_outbox_failed_handler;
 
 bool comms_is_js_ready() {
   return s_js_ready;
+}
+
+bool comms_prefs_flick_to_capture() {
+  return s_flick_to_capture;
+}
+
+bool comms_prefs_vibrate_on_capture() {
+  return s_vibrate_on_capture;
 }
 
 void comms_send(int request_code) {
@@ -52,11 +64,23 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     // PebbleKit JS is ready! Safe to send messages
     s_js_ready = true;
   }
+ 
+  // FIXME sgo persist preferences in watch storage
+  Tuple *flick_to_capture = dict_find(iter, MESSAGE_KEY_FLICK_TO_CAPTURE);
+  if (flick_to_capture) {
+    s_flick_to_capture = flick_to_capture->value->int32 == 1;
+  }
+  
+  Tuple *vib_on_capture = dict_find(iter, MESSAGE_KEY_VIBRATE_ON_CAPTURE);
+  if (vib_on_capture) {
+    s_vibrate_on_capture = vib_on_capture->value->int32 == 1;
+  }
+  
   APP_LOG(APP_LOG_LEVEL_DEBUG, comms_is_js_ready() ? "Ready!" : "nope");
   
   
   // log received app message
-  if (!ready_tuple) {
+  if (!ready_tuple && !flick_to_capture && !vib_on_capture) {
     int req_code = dict_find(iter, MESSAGE_KEY_REQ_CODE)->value->int32;
     int resp_code = dict_find(iter, MESSAGE_KEY_RESP_CODE)->value->int32;
     char *resp_msg = dict_find(iter, MESSAGE_KEY_RESP_MESSAGE)->value->cstring;

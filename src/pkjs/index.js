@@ -5,6 +5,15 @@ const REQ_STOP_SHUTTER = 2;
 const ERR_UNKNOWN = -1;
 const ERR_TIMEOUT = -2;
 
+// Clay configuration
+// Import the Clay package
+var Clay = require('pebble-clay');
+// Load our Clay configuration file
+var clayConfig = require('./config');
+// Initialize Clay
+var clay = new Clay(clayConfig);
+
+
 //  APP messages
 Pebble.addEventListener('ready',
   function(e) {

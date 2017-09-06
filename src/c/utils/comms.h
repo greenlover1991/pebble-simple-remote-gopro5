@@ -9,6 +9,10 @@
 /** True with PebbleKit JS is ready*/
 bool comms_is_js_ready();
 
+// User Preferences through settings
+bool comms_prefs_flick_to_capture();
+bool comms_prefs_vibrate_on_capture();
+
 void comms_send(int request_code);
 
 void comms_init(AppMessageInboxReceived inbox_received_handler,

@@ -13,15 +13,42 @@
 static Window* s_window;
 static TextLayer* s_hello_text_layer;
 
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (comms_is_js_ready()) {
+    text_layer_set_text(s_hello_text_layer, "Capturing...");
+    comms_send(REQ_TRIGGER_SHUTTER);
+  } else {
+    text_layer_set_text(s_hello_text_layer, "JS NOT READY...");
+  } 
+}
+
+static void accel_tap_handler(AccelAxisType accel, int32_t direction) {
+  if (accel == ACCEL_AXIS_Y) {
+    select_click_handler(NULL, NULL); 
+  }
+}
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
-  if(!dict_find(iter, MESSAGE_KEY_JS_READY)) {
+  if (dict_find(iter, MESSAGE_KEY_FLICK_TO_CAPTURE)) {
+    // FIXME sgo not need to be in comms?
+  
+    if (comms_prefs_flick_to_capture()) {
+      accel_tap_service_subscribe(accel_tap_handler);
+    } else {
+      accel_tap_service_unsubscribe();
+    }
+  
+  } else if(!dict_find(iter, MESSAGE_KEY_JS_READY) && 
+    !dict_find(iter, MESSAGE_KEY_VIBRATE_ON_CAPTURE)) {
     int req_code = dict_find(iter, MESSAGE_KEY_REQ_CODE)->value->int32;
     int resp_code = dict_find(iter, MESSAGE_KEY_RESP_CODE)->value->int32;
     char *resp_msg = dict_find(iter, MESSAGE_KEY_RESP_MESSAGE)->value->cstring;
     if (resp_code == 200) {
       text_layer_set_text(s_hello_text_layer, "Captured success");
-      // vibrate for feedback
-      vibes_short_pulse();
+      if (comms_prefs_vibrate_on_capture()) {
+        // vibrate for feedback
+        vibes_short_pulse();
+      }
     } else {
       text_layer_set_text(s_hello_text_layer, "Capturing failed.");
     }
@@ -34,25 +61,10 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   settings_window_push();
 }
 
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (comms_is_js_ready()) {
-    text_layer_set_text(s_hello_text_layer, "Capturing...");
-    comms_send(REQ_TRIGGER_SHUTTER);
-  } else {
-    text_layer_set_text(s_hello_text_layer, "JS NOT READY...");
-  } 
-}
-
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) up_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) select_click_handler);
   //window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)down_click_handler);
-}
-
-static void accel_tap_handler(AccelAxisType accel, int32_t direction) {
-  if (accel == ACCEL_AXIS_Y) {
-    select_click_handler(NULL, NULL); 
-  }
 }
 
 static void window_load(Window *window) {
@@ -69,7 +81,6 @@ static void window_load(Window *window) {
   
   // bind click and acceleration events
   window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
-  accel_tap_service_subscribe(accel_tap_handler);
 
   // initialize communications
   comms_init(inbox_received_handler, NULL, // FIXME sgo handle no app inbox connection

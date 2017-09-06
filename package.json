@@ -1,9 +1,14 @@
 {
     "author": "greenlover1991@gmail.com",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.4"
+    },
     "keywords": [],
     "name": "pebble-simple-remote-gopro5",
     "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
         "displayName": "pebble-simple-remote-gopro5",
         "enableMultiJS": true,
         "messageKeys": [
@@ -11,7 +16,9 @@
             "REQ_CODE",
             "RESP_CODE",
             "RESP_MESSAGE",
-            "RESP_DATA"
+            "RESP_DATA",
+            "FLICK_TO_CAPTURE",
+            "VIBRATE_ON_CAPTURE"
         ],
         "projectType": "native",
         "resources": {
